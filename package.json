@@ -17,6 +17,7 @@
     "@cerebras/cerebras_cloud_sdk": "^1.49.0",
     "commander": "^14.0.0",
     "diff": "^8.0.2",
+    "dotenv": "^17.4.2",
     "execa": "^9.6.0",
     "ink": "^6.5.1",
     "ink-text-input": "^6.0.0",

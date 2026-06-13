@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import 'dotenv/config';
 import React from 'react';
 import {Command} from 'commander';
 import {render} from 'ink';
