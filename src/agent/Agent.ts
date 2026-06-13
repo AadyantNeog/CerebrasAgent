@@ -109,10 +109,12 @@ export class Agent {
   private async handleToolCall(toolCall: ToolCall, callbacks: AgentCallbacks): Promise<void> {
     const tool = this.toolsByName.get(toolCall.name);
     if (!tool) {
-      this.pushToolResult(toolCall.id, {
+      const result = {
         success: false,
         summary: `Unknown tool: ${toolCall.name}`
-      });
+      };
+      callbacks.onToolResult(toolCall.name, result);
+      this.pushToolResult(toolCall.id, result);
       return;
     }
 

@@ -741,6 +741,8 @@ function PromptInput({
       return;
     }
 
+    // Most Windows terminals send DEL (0x7F) for Backspace, which Ink exposes
+    // as key.delete. Treat both flags as backward deletion for compatibility.
     if (key.backspace || key.delete) {
       if (cursorOffset === 0) {
         return;

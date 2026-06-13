@@ -130,11 +130,14 @@ export class CerebrasProvider implements ProviderClient {
   }
 }
 
-function toCerebrasRequest(input: ProviderInput) {
-  return {
+export function toCerebrasRequest(input: ProviderInput) {
+  const request: Record<string, unknown> = {
     model: input.model,
-    messages: input.messages.map(toCerebrasMessage),
-    tools: input.tools.map((tool) => ({
+    messages: input.messages.map(toCerebrasMessage)
+  };
+
+  if (input.tools.length > 0) {
+    request.tools = input.tools.map((tool) => ({
       type: 'function',
       function: {
         name: tool.name,
@@ -142,9 +145,11 @@ function toCerebrasRequest(input: ProviderInput) {
         strict: true,
         parameters: tool.parameters
       }
-    })),
-    tool_choice: 'auto'
-  };
+    }));
+    request.tool_choice = 'auto';
+  }
+
+  return request;
 }
 
 function toCerebrasMessage(message: ChatMessage): CerebrasMessage {

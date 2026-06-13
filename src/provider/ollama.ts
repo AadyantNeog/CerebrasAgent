@@ -93,11 +93,15 @@ export class OllamaProvider implements ProviderClient {
     let content = '';
     const nativeToolCalls: ToolCall[] = [];
     let usage: ProviderResponse['usage'];
+    const bufferForTextToolFallback = needsTextToolFallback(input.model);
 
     for await (const chunk of readJsonLines<OllamaStreamChunk>(response.body)) {
       const delta = chunk.message?.content ?? '';
       if (delta) {
         content += delta;
+        if (!bufferForTextToolFallback) {
+          yield {type: 'content_delta', delta};
+        }
       }
 
       for (const toolCall of chunk.message?.tool_calls ?? []) {
@@ -117,13 +121,13 @@ export class OllamaProvider implements ProviderClient {
       yield {type: 'usage', usage};
     }
 
-    const textToolCalls = nativeToolCalls.length === 0
+    const textToolCalls = nativeToolCalls.length === 0 && bufferForTextToolFallback
       ? parseTextToolCalls(content, input)
       : [];
     const toolCalls = nativeToolCalls.length > 0 ? nativeToolCalls : textToolCalls;
     const finalContent = toolCalls.length > 0 ? '' : content;
 
-    if (finalContent) {
+    if (finalContent && bufferForTextToolFallback) {
       yield {type: 'content_delta', delta: finalContent};
     }
 
@@ -136,6 +140,10 @@ export class OllamaProvider implements ProviderClient {
       }
     };
   }
+}
+
+function needsTextToolFallback(model: string): boolean {
+  return model.toLowerCase().startsWith('qwen2.5-coder:');
 }
 
 function toOllamaMessage(message: ChatMessage): OllamaMessage {

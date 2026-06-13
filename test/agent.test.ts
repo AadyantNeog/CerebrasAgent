@@ -113,6 +113,37 @@ describe('Agent', () => {
     expect(deltas).toEqual(['Hel', 'lo']);
     expect(fullMessages).toEqual([]);
   });
+
+  it('reports unknown tool calls as failed tool results', async () => {
+    const provider = fakeProvider([
+      {
+        role: 'assistant',
+        content: '',
+        toolCalls: [{id: 'call-1', name: 'missing_tool', argumentsJson: '{}'}]
+      },
+      {role: 'assistant', content: 'I could not run that tool.'}
+    ]);
+    const onToolResult = vi.fn();
+
+    const agent = new Agent({
+      config,
+      provider,
+      tools: []
+    });
+
+    await agent.send('use the missing tool', {
+      onAssistantMessage: vi.fn(),
+      onToolStart: vi.fn(),
+      onToolResult,
+      onError: vi.fn(),
+      requestApproval: vi.fn(async () => ({approved: true}))
+    });
+
+    expect(onToolResult).toHaveBeenCalledWith('missing_tool', {
+      success: false,
+      summary: 'Unknown tool: missing_tool'
+    });
+  });
 });
 
 function fakeProvider(messages: Awaited<ReturnType<ProviderClient['complete']>>['message'][]): ProviderClient {
